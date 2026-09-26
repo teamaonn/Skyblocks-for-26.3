@@ -1,0 +1,32 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        { "type": "minecraft:empty", "weight": 7 },
+        { "type": "minecraft:loot_table", "value": "minecraft:chests/abandoned_mineshaft" },
+        { "type": "minecraft:loot_table", "value": "minecraft:chests/ancient_city" },
+        { "type": "minecraft:loot_table", "value": "minecraft:chests/buried_treasure" },
+        { "type": "minecraft:loot_table", "value": "minecraft:chests/desert_pyramid" },
+        { "type": "minecraft:loot_table", "value": "minecraft:chests/igloo_chest" },
+        { "type": "minecraft:loot_table", "value": "minecraft:chests/jungle_temple" },
+        { "type": "minecraft:loot_table", "value": "minecraft:chests/pillager_outpost" },
+        { "type": "minecraft:loot_table", "value": "minecraft:chests/shipwreck_map" },
+        { "type": "minecraft:loot_table", "value": "minecraft:chests/shipwreck_supply" },
+        { "type": "minecraft:loot_table", "value": "minecraft:chests/shipwreck_treasure" },
+        { "type": "minecraft:loot_table", "value": "minecraft:chests/simple_dungeon" },
+        { "type": "minecraft:loot_table", "value": "minecraft:chests/stronghold_corridor" },
+        { "type": "minecraft:loot_table", "value": "minecraft:chests/stronghold_library" },
+        { "type": "minecraft:loot_table", "value": "minecraft:chests/underwater_ruin_big" },
+        { "type": "minecraft:loot_table", "value": "minecraft:chests/village/village_armorer" },
+        { "type": "minecraft:loot_table", "value": "minecraft:chests/woodland_mansion" },
+        { "type": "minecraft:loot_table", "value": "minecraft:chests/nether_bridge" },
+        { "type": "minecraft:loot_table", "value": "minecraft:chests/ruined_portal" },
+        { "type": "minecraft:loot_table", "value": "minecraft:chests/bastion_treasure" },
+        { "type": "minecraft:loot_table", "value": "minecraft:chests/bastion_other" },
+        { "type": "minecraft:loot_table", "value": "minecraft:chests/end_city_treasure" }
+      ]
+    }
+  ]
+}

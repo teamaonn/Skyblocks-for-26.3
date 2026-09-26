@@ -24,3 +24,13 @@ biomes, with one repeated biome assignment because 22 × 3 is 66.
 The source NBT files came from the supplied conversion pass. That pass removed
 34 legacy entities; the final structures therefore contain blocks and modern
 structure data, but not those discarded pre-1.13 entities.
+
+## Chest loot
+
+Each ordinary or trapped chest in the included islands uses
+`sky_islands:chests/random`. On first opening, it independently picks an empty
+result (25% chance) or one of 21 vanilla chest loot tables from the Overworld,
+Nether, and End. Existing chests already placed in a world are unchanged.
+Ender chests retain their normal player-specific inventory. The source NBT
+templates can be updated after a conversion with `python tools/assign_chest_loot.py`
+(requires the Python `nbtlib` package).
