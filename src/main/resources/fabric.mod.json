@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "sky_islands",
+  "version": "${version}",
+  "name": "Sky Islands",
+  "description": "Twenty-two floating sky islands that generate naturally through Cristel Lib.",
+  "authors": ["Teamaonn"],
+  "contact": {
+    "sources": "https://github.com/teamaonn"
+  },
+  "license": "MIT",
+  "environment": "*",
+  "depends": {
+    "fabricloader": ">=0.19.5",
+    "minecraft": ">=26.3",
+    "cristellib": ">=3.1.12"
+  }
+}

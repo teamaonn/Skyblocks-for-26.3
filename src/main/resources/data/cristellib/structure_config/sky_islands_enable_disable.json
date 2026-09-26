@@ -1,0 +1,17 @@
+{
+  "name": "sky_islands_structure_enable_or_disable",
+  "path": "<CONFIG_DIR>/sky_islands",
+  "header": "Controls whether the Sky Islands structure set is enabled.",
+  "config_type": "ENABLE_DISABLE",
+  "comments": {
+    "islands": "The Sky Islands structure set."
+  },
+  "structure_sets": [
+    {
+      "modid": "sky_islands",
+      "structure_set": [
+        "sky_islands:islands"
+      ]
+    }
+  ]
+}

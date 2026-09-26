@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:frozen_river",
+    "minecraft:grove",
+    "minecraft:ice_spikes"
+  ]
+}

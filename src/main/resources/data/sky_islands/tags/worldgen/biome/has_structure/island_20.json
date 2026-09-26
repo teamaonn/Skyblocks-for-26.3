@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:the_void",
+    "minecraft:warm_ocean",
+    "minecraft:warped_forest"
+  ]
+}

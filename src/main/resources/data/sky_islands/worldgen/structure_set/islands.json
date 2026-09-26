@@ -1,0 +1,98 @@
+{
+  "structures": [
+    {
+      "structure": "sky_islands:island_1",
+      "weight": 1
+    },
+    {
+      "structure": "sky_islands:island_2",
+      "weight": 1
+    },
+    {
+      "structure": "sky_islands:island_3",
+      "weight": 1
+    },
+    {
+      "structure": "sky_islands:island_4",
+      "weight": 1
+    },
+    {
+      "structure": "sky_islands:island_5",
+      "weight": 1
+    },
+    {
+      "structure": "sky_islands:island_6",
+      "weight": 1
+    },
+    {
+      "structure": "sky_islands:island_7",
+      "weight": 1
+    },
+    {
+      "structure": "sky_islands:island_8",
+      "weight": 1
+    },
+    {
+      "structure": "sky_islands:island_9",
+      "weight": 1
+    },
+    {
+      "structure": "sky_islands:island_10",
+      "weight": 1
+    },
+    {
+      "structure": "sky_islands:island_11",
+      "weight": 1
+    },
+    {
+      "structure": "sky_islands:island_12",
+      "weight": 1
+    },
+    {
+      "structure": "sky_islands:island_13",
+      "weight": 1
+    },
+    {
+      "structure": "sky_islands:island_14",
+      "weight": 1
+    },
+    {
+      "structure": "sky_islands:island_15",
+      "weight": 1
+    },
+    {
+      "structure": "sky_islands:island_16",
+      "weight": 1
+    },
+    {
+      "structure": "sky_islands:island_17",
+      "weight": 1
+    },
+    {
+      "structure": "sky_islands:island_18",
+      "weight": 1
+    },
+    {
+      "structure": "sky_islands:island_19",
+      "weight": 1
+    },
+    {
+      "structure": "sky_islands:island_20",
+      "weight": 1
+    },
+    {
+      "structure": "sky_islands:island_21",
+      "weight": 1
+    },
+    {
+      "structure": "sky_islands:island_22",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "type": "minecraft:random_spread",
+    "salt": 19860922,
+    "spacing": 96,
+    "separation": 48
+  }
+}

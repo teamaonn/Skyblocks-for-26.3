@@ -1,0 +1,112 @@
+{
+  "island_1": [
+    "badlands",
+    "bamboo_jungle",
+    "basalt_deltas"
+  ],
+  "island_2": [
+    "beach",
+    "birch_forest",
+    "cherry_grove"
+  ],
+  "island_3": [
+    "cold_ocean",
+    "crimson_forest",
+    "dark_forest"
+  ],
+  "island_4": [
+    "deep_cold_ocean",
+    "deep_dark",
+    "deep_frozen_ocean"
+  ],
+  "island_5": [
+    "deep_lukewarm_ocean",
+    "deep_ocean",
+    "desert"
+  ],
+  "island_6": [
+    "dripstone_caves",
+    "end_barrens",
+    "end_highlands"
+  ],
+  "island_7": [
+    "end_midlands",
+    "eroded_badlands",
+    "flower_forest"
+  ],
+  "island_8": [
+    "forest",
+    "frozen_ocean",
+    "frozen_peaks"
+  ],
+  "island_9": [
+    "frozen_river",
+    "grove",
+    "ice_spikes"
+  ],
+  "island_10": [
+    "jagged_peaks",
+    "jungle",
+    "lukewarm_ocean"
+  ],
+  "island_11": [
+    "lush_caves",
+    "mangrove_swamp",
+    "meadow"
+  ],
+  "island_12": [
+    "mushroom_fields",
+    "nether_wastes",
+    "ocean"
+  ],
+  "island_13": [
+    "old_growth_birch_forest",
+    "old_growth_pine_taiga",
+    "old_growth_spruce_taiga"
+  ],
+  "island_14": [
+    "pale_garden",
+    "plains",
+    "river"
+  ],
+  "island_15": [
+    "savanna",
+    "savanna_plateau",
+    "small_end_islands"
+  ],
+  "island_16": [
+    "snowy_beach",
+    "snowy_plains",
+    "snowy_slopes"
+  ],
+  "island_17": [
+    "snowy_taiga",
+    "soul_sand_valley",
+    "sparse_jungle"
+  ],
+  "island_18": [
+    "stony_peaks",
+    "stony_shore",
+    "sunflower_plains"
+  ],
+  "island_19": [
+    "swamp",
+    "taiga",
+    "the_end"
+  ],
+  "island_20": [
+    "the_void",
+    "warm_ocean",
+    "warped_forest"
+  ],
+  "island_21": [
+    "windswept_forest",
+    "windswept_gravelly_hills",
+    "windswept_hills"
+  ],
+  "island_22": [
+    "windswept_savanna",
+    "wooded_badlands",
+    "badlands"
+  ]
+}

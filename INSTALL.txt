@@ -1,0 +1,24 @@
+Sky Islands — Minecraft 26.3
+
+INSTALLATION
+
+1. Install Fabric Loader for Minecraft 26.3.
+2. Install Fabric API and Cristel Lib 3.1.12 or newer.
+3. Put skyblocks-0.1.0.jar into the instance's mods folder.
+4. Create a new world after installing the mod. Structures are selected during
+   chunk generation, so previously generated chunks will not be retrofitted.
+
+GENERATION SETTINGS
+
+Cristel Lib's Sky Islands settings are created under config/sky_islands after
+the first launch. The built-in placement is intentionally sparse: spacing 96
+chunks and separation 48 chunks. The islands begin at Y=192.
+
+BUILDING FROM SOURCE
+
+Open the skyblocks-26.3 folder in Windows PowerShell and run the user's normal
+Minecraft 26.3 Gradle command:
+
+    C:\Gradle\bin\gradle.bat build
+
+The Loom-built JAR will be written to build/libs/.
