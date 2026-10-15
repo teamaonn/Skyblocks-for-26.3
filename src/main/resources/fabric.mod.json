@@ -10,9 +10,15 @@
   },
   "license": "MIT",
   "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.teamaonn.skyislands.SkyIslands"
+    ]
+  },
   "depends": {
     "fabricloader": ">=0.19.5",
     "minecraft": ">=26.3",
+    "fabric-api": ">=0.160.7",
     "cristellib": ">=3.1.12"
   }
 }

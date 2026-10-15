@@ -10,5 +10,5 @@
   "start_pool": "sky_islands:island_19",
   "step": "surface_structures",
   "terrain_adaptation": "none",
-  "use_expansion_hack": false
+  "use_expansion_hack": true
 }

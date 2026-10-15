@@ -24,13 +24,52 @@ biomes, with one repeated biome assignment because 22 × 3 is 66.
 The source NBT files came from the supplied conversion pass. That pass removed
 34 legacy entities; the final structures therefore contain blocks and modern
 structure data, but not those discarded pre-1.13 entities.
+# Large Island Support
 
-## Chest loot
+## Random loot on every island
 
-Each ordinary or trapped chest in the included islands uses
-`sky_islands:chests/random`. On first opening, it independently picks an empty
-result (25% chance) or one of 21 vanilla chest loot tables from the Overworld,
-Nether, and End. Existing chests already placed in a world are unchanged.
-Ender chests retain their normal player-specific inventory. The source NBT
-templates can be updated after a conversion with `python tools/assign_chest_loot.py`
-(requires the Python `nbtlib` package).
+Every chest, trapped chest, and barrel in all 22 island templates uses the same
+combined pool of vanilla Minecraft 26.3 chest loot tables. Each container rolls
+independently when its loot is first generated. Overworld, Nether, End, village,
+and trial chamber loot are all eligible immediately, with equal table weights
+and no progression or island restrictions. There is no added empty-result entry;
+the chosen vanilla table controls its own contents and rolls.
+
+This applies to newly generated or newly placed islands. Containers already
+saved in a world are not modified. Ender chests retain their normal behavior.
+
+After converting or replacing any template, run `python tools/assign_chest_loot.py`
+(requires `nbtlib`) to restore assignments and rebuild the shared loot table.
+
+## Fixed starter placement
+
+Use the starter command on a fresh world when you want the selected island to
+be placed at the same known location instead of waiting for normal worldgen:
+
+```
+/skyislands start 19
+```
+
+The island is placed with its template origin at `(0, 120, 0)`. Island 19
+then sends the player to the bed included in that template. The command also
+accepts the original capitalized spelling `/SkyIslands start <number>`.
+For the other islands, it sends the player to a solid surface selected from
+that island's template instead of leaving them at the template origin. Island
+19's four spawners are explicitly configured as two cow spawners and two
+chicken spawners.
+
+Island 5 and Island 19 use the vanilla jigsaw expansion path because their
+templates are larger than the normal structure footprint. The mod also adds
+repair commands for worlds where one of those islands was only partially
+written:
+
+```
+/skyislands restore nearest19
+/skyislands restore nearest5
+```
+
+Stand near the incomplete island first. The command scans nearby generated
+structure starts, selects the nearest matching island, clears its actual saved
+bounding box in small slices, and places the complete template there. Move
+valuable items and animals away first. Chest and trapped-chest blocks have fresh
+random loot tables.
