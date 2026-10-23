@@ -26,40 +26,43 @@ The source NBT files came from the supplied conversion pass. That pass removed
 structure data, but not those discarded pre-1.13 entities.
 # Large Island Support
 
-## Automatic completion in survival and Hardcore
+## Player-triggered repairs in survival and Hardcore
 
-Islands 5 and 19 are checked automatically when a player approaches their
-naturally generated location. No commands, operator permissions, or cheats are
-required. The check also works on structures already saved in an existing world.
+There is no recurring proximity scan. Build an iron-golem-shaped T using four
+lodestones (three across, one under the middle) on a naturally generated Sky
+Island, then place a carved pumpkin on top of the middle block **last**. Either
+horizontal orientation works; a jack o'lantern also works. No commands, operator
+permissions, or cheats are needed. All 22 mod island templates are supported.
 
-The mod reads the island's actual saved template origin and rotation, then checks
-fully loaded chunk sections within 128 horizontal blocks of a player. Entirely
-missing sections are filled from the original template in small batches. It
-does not force-load distant chunks, clear the island, replace surviving blocks,
-refill existing containers, or respawn entities. Placement waits while a player
-is standing inside the missing section. Newly restored containers retain their
-random loot tables and spawners retain their template data.
+Completing the marker starts a one-time search for the island's saved origin and
+rotation. Missing chunk-sized sections are restored in small batches while the
+island is loaded. Keep the marker intact and walk around the island if distant
+parts need loading. Once the check and repair finish, the pumpkin and exactly
+four lodestones are erased without item drops. Invalid locations keep the blocks.
+Breaking an active marker cancels further work without consuming its other blocks;
+sections already repaired remain. Requested repairs resume after a normal restart
+if the marker is still intact, without restarting any background island discovery.
 
-Completed checks and repairs are saved per dimension with the world. Subsequent
-visits do not undo mining. Interrupted repairs resume without replacing existing
-blocks or containers. Each tick checks at most 2,048 blocks or places at most 128
-blocks, so a large repair takes some time; approach and let the area finish.
+Existing blocks and container contents are preserved; existing chests are never
+refilled, and entities are never respawned. Placement pauses if a player is inside
+the section being filled. Completed checks and pending repairs are saved with the
+world. Subsequent visits do not undo mining. Each active tick checks at most
+2,048 block positions or places at most 128 blocks; idle ticks do no discovery.
 
-The automatic check is intentionally conservative: a section containing any
-solid surviving structure or player block is left alone. It repairs whole missing
-chunk sections, not individual mined holes or partially damaged buildings. On the
-first check after installing this update, a whole section that was previously
-mined completely empty cannot be distinguished from a generation gap and may be
-filled once. World height limits still apply.
+The repair is conservative: sections containing surviving structure or player
+blocks are left alone. This fills entire missing sections, not individual mined
+holes or partly damaged buildings. Completely empty sections that were mined out
+before their first check can be filled once when you activate a marker. World
+height limits still apply.
 
 ### Repair regression tests
 
-Run `gradle build runGameTest` with Java 25 and Gradle 9.7.1. For the headless test
-server, place Cristel Lib 3.1.12 or newer in `build/run/gameTest/mods/` first.
-The test mod lives in `src/gametest` and is not included in the playable JAR.
-Tests cover missing blocks and chest loot, existing builds, saved repair recovery
-without a chest refill, player collision protection, rotation, and revisits after
-mining. GitHub Actions installs the test dependency and runs these checks.
+Run `gradle build runGameTest` with Java 25 and Gradle 9.7.1. Put Cristel Lib 3.1.12
+or newer in `build/run/gameTest/mods/` for the headless test server first. The test
+mod in `src/gametest` is not included in the playable JAR. Tests cover marker
+activation and consumption, no proximity activation, invalid locations, incomplete
+patterns, both orientations, saved recovery, existing chests/builds, player
+collision protection, rotation, and revisits after mining.
 
 ## Random loot on every island
 
