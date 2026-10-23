@@ -16,8 +16,12 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '9.7.1'
-      - name: Build
-        run: gradle build --no-daemon
+      - name: Install test runtime dependency
+        run: |
+          mkdir -p build/run/gameTest/mods
+          curl --fail --location --retry 3 https://cdn.modrinth.com/data/cl223EMc/versions/rWxmPrGC/cristellib-fabric-26.3-3.1.13.jar -o build/run/gameTest/mods/cristellib.jar
+      - name: Build and test repair in Minecraft
+        run: gradle build runGameTest --no-daemon
       - uses: actions/upload-artifact@v4
         with:
           name: skyblocks-jar

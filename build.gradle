@@ -16,6 +16,15 @@ dependencies {
     implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 }
 
+fabricApi {
+    configureTests {
+        createSourceSet = true
+        modId = "sky_islands_tests"
+        enableGameTests = true
+        eula = true
+    }
+}
+
 processResources {
     inputs.property 'version', project.version
     filesMatching('fabric.mod.json') {

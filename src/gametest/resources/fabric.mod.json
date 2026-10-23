@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "id": "sky_islands_tests",
+  "version": "1.0.0",
+  "name": "Sky Islands repair tests",
+  "environment": "server",
+  "entrypoints": {
+    "fabric-gametest": ["com.teamaonn.skyislands.IslandRepairGameTests"]
+  }
+}

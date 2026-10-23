@@ -23,6 +23,7 @@ public final class SkyIslands implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        AutomaticIslandRepair.register();
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) ->
                 registerCommands(dispatcher));
     }
