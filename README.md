@@ -4,6 +4,8 @@ This Fabric mod adds 22 floating islands as native Minecraft structures. It
 uses the converted structure NBT files supplied for this project and follows
 the data-driven layout used by Towns and Towers.
 
+[Download 0.1.5 full restore](downloads/skyblocks-0.1.5-full-restore.jar)
+
 ## Runtime requirements
 
 - Minecraft 26.3
@@ -35,25 +37,22 @@ horizontal orientation works; a jack o'lantern also works. No commands, operator
 permissions, or cheats are needed. All 22 mod island templates are supported.
 
 Completing the marker starts a one-time search for the island's saved origin and
-rotation. Missing chunk-sized sections are restored in small batches while the
-island is loaded. Keep the marker intact and walk around the island if distant
-parts need loading. Once the check and repair finish, the pumpkin and exactly
-four lodestones are erased without item drops. Invalid locations keep the blocks.
-Breaking an active marker cancels further work without consuming its other blocks;
-sections already repaired remain. Requested repairs resume after a normal restart
-if the marker is still intact, without restarting any background island discovery.
+rotation, then restores the original template in small batches. **This is a full
+reset: player builds, mined blocks, existing containers and their contents are
+overwritten. Template air clears existing blocks. Chests, trapped chests and barrels
+receive fresh random loot tables; spawners and other block entities reset from the
+template. Move valuables away before activating it.** Entities are not respawned.
 
-Existing blocks and container contents are preserved; existing chests are never
-refilled, and entities are never respawned. Placement pauses if a player is inside
-the section being filled. Completed checks and pending repairs are saved with the
-world. Subsequent visits do not undo mining. Each active tick checks at most
-2,048 block positions or places at most 128 blocks; idle ticks do no discovery.
+Keep the marker intact and the island loaded. Walk around to load distant chunks.
+Once restoration finishes, exactly four lodestones and the pumpkin are consumed
+without drops. Placement pauses while a player is inside the section being restored.
+Invalid locations keep all marker blocks. Breaking the marker cancels further work;
+changes already made remain. Active requests resume after a normal restart.
 
-The repair is conservative: sections containing surviving structure or player
-blocks are left alone. This fills entire missing sections, not individual mined
-holes or partly damaged buildings. Completely empty sections that were mined out
-before their first check can be filled once when you activate a marker. World
-height limits still apply.
+Each newly built marker starts a fresh full restoration, even if an older version
+marked sections checked without repairing them. Mere visits never activate it.
+At most 2,048 template entries are scanned or 128 blocks placed per active tick.
+No recurring proximity scan runs. World height and border limits still apply.
 
 ### Repair regression tests
 
@@ -61,7 +60,7 @@ Run `gradle build runGameTest` with Java 25 and Gradle 9.7.1. Put Cristel Lib 3.
 or newer in `build/run/gameTest/mods/` for the headless test server first. The test
 mod in `src/gametest` is not included in the playable JAR. Tests cover marker
 activation and consumption, no proximity activation, invalid locations, incomplete
-patterns, both orientations, saved recovery, existing chests/builds, player
+patterns, both orientations, saved recovery, resetting existing chests/builds and template air, player
 collision protection, rotation, and revisits after mining.
 
 ## Random loot on every island

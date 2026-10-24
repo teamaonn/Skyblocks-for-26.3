@@ -80,19 +80,19 @@ public final class IslandRepairGameTests {
     }
 
     @GameTest
-    public void preservesPlayerBlocksAndExistingSections(GameTestHelper helper) {
+    public void overwritesSurvivingBlocksAndExistingSections(GameTestHelper helper) {
         observer(helper);
         var section = emptySection(helper, "existing");
         helper.setBlock(LOCAL, Blocks.DIAMOND_BLOCK);
         var ledger = new IslandRepairData();
         runSection(helper, section, ledger);
-        helper.assertBlockPresent(Blocks.DIAMOND_BLOCK, LOCAL);
-        helper.assertBlockPresent(Blocks.AIR, LOCAL.above());
+        helper.assertBlockPresent(Blocks.STONE, LOCAL);
+        helper.assertBlockPresent(Blocks.CHEST, LOCAL.above());
         helper.succeed();
     }
 
     @GameTest
-    public void resumesSavedRepairWithoutRefillingChest(GameTestHelper helper) {
+    public void resetsExistingChestIncludingAfterSavedRecovery(GameTestHelper helper) {
         observer(helper);
         var section = emptySection(helper, "interrupted");
         helper.setBlock(LOCAL.above(), Blocks.CHEST);
@@ -108,10 +108,11 @@ public final class IslandRepairGameTests {
         helper.assertTrue(marker.equals(reopened.rituals.get("request")), "active markers survive a saved-data round trip");
         runSection(helper, section, reopened);
         helper.assertBlockPresent(Blocks.STONE, LOCAL);
-        helper.assertTrue(chest.getItem(0).is(Items.DIAMOND) && chest.getItem(0).getCount() == 7,
-                "existing chest contents must survive a resumed repair");
-        helper.assertTrue(!chest.saveWithFullMetadata(helper.getLevel().registryAccess()).contains("LootTable"),
-                "existing chest must not receive fresh loot");
+        var restored = helper.getBlockEntity(LOCAL.above(), ChestBlockEntity.class);
+        helper.assertTrue(restored != chest, "old chest entity is replaced even for the same block type");
+        helper.assertTrue(restored.saveWithFullMetadata(helper.getLevel().registryAccess())
+                .getStringOr("LootTable", "").equals("sky_islands:chests/random"),
+                "existing chest gets a fresh template loot table");
         helper.succeed();
     }
 
@@ -151,6 +152,93 @@ public final class IslandRepairGameTests {
         var revisit = new AutomaticIslandRepair.RepairTask(helper.getLevel(), key, template, origin, Rotation.CLOCKWISE_90);
         for (int i = 0; i < 100; i++) revisit.step(helper.getLevel());
         helper.assertTrue(helper.getLevel().getBlockState(origin).isAir(), "subsequent visits do not undo mining");
+        helper.succeed();
+    }
+
+    @GameTest
+    public void restoresTemplateAirAndResetsBarrel(GameTestHelper helper) {
+        observer(helper);
+        var section = new AutomaticIslandRepair.SectionWork("air-and-barrel");
+        BlockPos pos = helper.absolutePos(LOCAL);
+        helper.setBlock(LOCAL, Blocks.DIAMOND_BLOCK);
+        helper.setBlock(LOCAL.above(), Blocks.BARREL);
+        var old = helper.getLevel().getBlockEntity(pos.above());
+        ((net.minecraft.world.level.block.entity.BarrelBlockEntity) old).setItem(0, new ItemStack(Items.DIAMOND, 64));
+        CompoundTag nbt = new CompoundTag();
+        nbt.putString("id", "minecraft:barrel");
+        nbt.putString("LootTable", "sky_islands:chests/random");
+        section.add(new AutomaticIslandRepair.ExpectedBlock(pos, Blocks.AIR.defaultBlockState(), null));
+        section.add(new AutomaticIslandRepair.ExpectedBlock(pos.above(), Blocks.BARREL.defaultBlockState(), nbt));
+        section.prepare();
+        runSection(helper, section, new IslandRepairData());
+        helper.assertBlockPresent(Blocks.AIR, LOCAL);
+        var restored = helper.getLevel().getBlockEntity(pos.above());
+        helper.assertTrue(restored != old, "barrel inventory must not survive reset");
+        helper.assertTrue(restored.saveWithFullMetadata(helper.getLevel().registryAccess())
+                .getStringOr("LootTable", "").equals("sky_islands:chests/random"), "barrel gets fresh loot");
+        helper.succeed();
+    }
+
+    @GameTest
+    public void sparseTemplateRestoresAcrossThreeChunks(GameTestHelper helper) {
+        observer(helper);
+        var level = helper.getLevel();
+        var template = new StructureTemplate();
+        CompoundTag data = new CompoundTag();
+        var size = new net.minecraft.nbt.ListTag();
+        size.add(net.minecraft.nbt.IntTag.valueOf(35));
+        size.add(net.minecraft.nbt.IntTag.valueOf(1));
+        size.add(net.minecraft.nbt.IntTag.valueOf(1));
+        data.put("size", size);
+        var palette = new net.minecraft.nbt.ListTag();
+        palette.add(net.minecraft.nbt.NbtUtils.writeBlockState(Blocks.STONE.defaultBlockState()));
+        data.put("palette", palette);
+        var blocks = new net.minecraft.nbt.ListTag();
+        for (int x : new int[]{0, 34}) {
+            CompoundTag block = new CompoundTag();
+            var pos = new net.minecraft.nbt.ListTag();
+            pos.add(net.minecraft.nbt.IntTag.valueOf(x));
+            pos.add(net.minecraft.nbt.IntTag.valueOf(0));
+            pos.add(net.minecraft.nbt.IntTag.valueOf(0));
+            block.put("pos", pos); block.putInt("state", 0); blocks.add(block);
+        }
+        data.put("blocks", blocks);
+        template.load(level.registryAccess().lookupOrThrow(Registries.BLOCK), data);
+        BlockPos base = helper.absolutePos(new BlockPos(2, 8, 2));
+        BlockPos origin = new BlockPos((base.getX() >> 4) << 4, base.getY(), base.getZ());
+        for (int x = 0; x <= 35; x++) {
+            level.getChunk(origin.offset(x, 0, 0));
+            level.setBlock(origin.offset(x, 0, 0), Blocks.DIAMOND_BLOCK.defaultBlockState(), Block.UPDATE_CLIENTS);
+        }
+        var task = new AutomaticIslandRepair.RepairTask(level, "sparse-three-chunks/" + origin.asLong(), template, origin, Rotation.NONE);
+        for (int tick = 0; tick < 100; tick++) task.step(level);
+        helper.assertTrue(task.sections.isEmpty(), "all three chunks complete despite surviving blocks");
+        for (int x = 0; x < 35; x++) {
+            helper.assertTrue(level.getBlockState(origin.offset(x, 0, 0)).is(x == 0 || x == 34 ? Blocks.STONE : Blocks.AIR),
+                    "omitted template air is cleared, including the entirely empty middle chunk");
+        }
+        helper.assertTrue(level.getBlockState(origin.offset(35, 0, 0)).is(Blocks.DIAMOND_BLOCK), "outside the template remains untouched");
+        helper.succeed();
+    }
+
+    @GameTest
+    public void savedCompletionRestoresBlockUnderMarker(GameTestHelper helper) {
+        observer(helper);
+        var level = helper.getLevel();
+        helper.setBlock(LOCAL, Blocks.GOLD_BLOCK);
+        var template = new StructureTemplate();
+        template.fillFromWorld(level, helper.absolutePos(LOCAL), new Vec3i(1, 1, 1), false, List.of());
+        BlockPos origin = helper.absolutePos(new BlockPos(4, 7, 4));
+        var ritual = new IslandRepairData.Ritual(origin, true);
+        buildBody(helper, ritual);
+        level.setBlock(origin, Blocks.CARVED_PUMPKIN.defaultBlockState(), Block.UPDATE_CLIENTS);
+        String key = "saved-marker/" + origin.asLong();
+        var task = new AutomaticIslandRepair.RepairTask(level, key, template, origin, Rotation.NONE);
+        task.ritual = ritual;
+        task.ledger.finish(key + "/" + ChunkPos.pack(origin.getX() >> 4, origin.getZ() >> 4));
+        for (int tick = 0; tick < 20; tick++) task.step(level);
+        helper.assertTrue(task.completeRitual(level), "saved completed section can finish its marker");
+        helper.assertTrue(level.getBlockState(origin).is(Blocks.GOLD_BLOCK), "template block under marker is restored after restart");
         helper.succeed();
     }
 
@@ -209,6 +297,9 @@ public final class IslandRepairGameTests {
         // More than two seconds near a registered broken island does nothing.
         helper.runAfterDelay(60, () -> {
             helper.assertTrue(level.getBlockState(fixture.origin()).isAir(), "proximity must never activate repair");
+            var ledger = level.getDataStorage().computeIfAbsent(IslandRepairData.TYPE);
+            String key = "sky_islands:" + island + "/" + fixture.origin().asLong() + "/" + rotation;
+            ledger.finish(key + "/" + ChunkPos.pack(fixture.origin().getX() >> 4, fixture.origin().getZ() >> 4));
             buildBody(helper, ritual);
             BlockPos arm = alongX ? ritual.head().below().east() : ritual.head().below().south();
             level.setBlock(arm, Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS);

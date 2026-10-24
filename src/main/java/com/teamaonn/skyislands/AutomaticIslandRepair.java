@@ -41,7 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** Repairs missing sections only after a player builds a lodestone marker. */
+/** Restores the original island, including containers, after a lodestone marker. */
 final class AutomaticIslandRepair {
     private static final Logger LOGGER = LoggerFactory.getLogger("sky_islands/automatic_repair");
     private static final int DISCOVERY_RADIUS = 12;
@@ -159,10 +159,14 @@ final class AutomaticIslandRepair {
                         }
                         RepairTask task = new RepairTask(level, key, template, pool.getPosition(), pool.getRotation());
                         task.ritual = ritual;
+                        // A newly built marker is an explicit full reset. Old conservative
+                        // checks must never prevent a requested restoration.
+                        task.ledger.checked.removeIf(section -> section.startsWith(key + "/"));
+                        task.ledger.pending.removeIf(section -> section.startsWith(key + "/"));
                         task.ledger.rituals.put(key, ritual);
                         task.ledger.setDirty();
                         work.tasks.put(key, task);
-                        tell(level, playerId, "Sky Island repair started. Keep the marker intact and the island loaded until it finishes.");
+                        tell(level, playerId, "Sky Island full restoration started. Existing builds and container contents will be reset. Keep the marker intact and the island loaded.");
                         return;
                     }
                 }
@@ -192,6 +196,7 @@ final class AutomaticIslandRepair {
         final List<BlockState> palette = new ArrayList<>();
         final Map<Long, SectionWork> sections = new LinkedHashMap<>();
         final List<ExpectedBlock> coveredByMarker = new ArrayList<>();
+        final net.minecraft.world.level.levelgen.structure.BoundingBox bounds;
         IslandRepairData.Ritual ritual;
         int index;
 
@@ -206,6 +211,7 @@ final class AutomaticIslandRepair {
                 palette.add(NbtUtils.readBlockState(blockRegistry, (CompoundTag) entry).rotate(rotation));
             }
             blocks = data.getListOrEmpty("blocks");
+            bounds = template.getBoundingBox(new StructurePlaceSettings().setRotation(rotation), origin);
         }
 
         boolean step(ServerLevel level) {
@@ -214,7 +220,7 @@ final class AutomaticIslandRepair {
                 while (index < end) {
                     CompoundTag data = blocks.getCompoundOrEmpty(index++);
                     BlockState state = palette.get(data.getIntOr("state", 0));
-                    if (state.isAir() || state.is(Blocks.STRUCTURE_VOID)) {
+                    if (state.is(Blocks.STRUCTURE_VOID)) {
                         continue;
                     }
                     ListTag p = data.getListOrEmpty("pos");
@@ -225,16 +231,32 @@ final class AutomaticIslandRepair {
                     }
                     long chunk = ChunkPos.pack(pos.getX() >> 4, pos.getZ() >> 4);
                     String sectionKey = key + "/" + chunk;
-                    if (ledger.checked.contains(sectionKey)) {
-                        continue;
-                    }
                     if (ritual != null && ritual.positions().contains(pos)) {
                         coveredByMarker.add(new ExpectedBlock(pos, state, data.getCompound("nbt").orElse(null)));
+                    }
+                    if (ledger.checked.contains(sectionKey)) {
+                        continue;
                     }
                     SectionWork section = sections.computeIfAbsent(chunk, ignored -> new SectionWork(sectionKey));
                     section.add(new ExpectedBlock(pos, state, data.getCompound("nbt").orElse(null)));
                 }
                 if (index == blocks.size()) {
+                    // Templates are sparse: omitted positions are original air too.
+                    // Clear the entire saved template volume, including empty chunks.
+                    for (int x = bounds.minX() >> 4; x <= bounds.maxX() >> 4; x++) {
+                        for (int z = bounds.minZ() >> 4; z <= bounds.maxZ() >> 4; z++) {
+                            long chunk = ChunkPos.pack(x, z);
+                            String sectionKey = key + "/" + chunk;
+                            if (ledger.checked.contains(sectionKey)) continue;
+                            SectionWork section = sections.computeIfAbsent(chunk, ignored -> new SectionWork(sectionKey));
+                            section.minX = Math.max(bounds.minX(), x << 4);
+                            section.maxX = Math.min(bounds.maxX(), (x << 4) + 15);
+                            section.minZ = Math.max(bounds.minZ(), z << 4);
+                            section.maxZ = Math.min(bounds.maxZ(), (z << 4) + 15);
+                            section.minY = Math.max(bounds.minY(), level.getMinY());
+                            section.maxY = Math.min(bounds.maxY(), level.getMaxY());
+                        }
+                    }
                     sections.values().forEach(section -> {
                         section.reserved = ritual == null ? Set.of() : ritual.positions();
                         section.prepare();
@@ -262,7 +284,7 @@ final class AutomaticIslandRepair {
             if (coveredByMarker.stream().anyMatch(block -> level.players().stream().anyMatch(player ->
                     player.getBoundingBox().intersects(new AABB(block.position()))))) return false;
             // Consume exactly the five activating blocks, without item drops.
-            // Never clear surrounding blocks or replay surviving containers.
+            // Restore template blocks covered by the marker only after consuming it.
             for (BlockPos pos : ritual.positions()) {
                 level.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE);
             }
@@ -272,23 +294,21 @@ final class AutomaticIslandRepair {
             LOGGER.info("Lodestone repair complete; consumed marker at {}", ritual.head());
             for (var player : level.players()) {
                 if (player.blockPosition().distSqr(ritual.head()) <= 256 * 256) {
-                    player.sendSystemMessage(Component.literal("Sky Island repair finished. The lodestone marker has been consumed."));
+                    player.sendSystemMessage(Component.literal("Sky Island fully restored, including containers. The lodestone marker has been consumed."));
                 }
             }
             return true;
         }
     }
 
-    private static boolean replaceable(BlockState state) {
-        // Only air or plain flowing liquids. Never treat plants, blocks with a
-        // replaceable material, or waterlogged player builds as disposable.
-        return state.isAir() || state.is(Blocks.WATER) || state.is(Blocks.LAVA);
-    }
-
     private static void placeExpected(ServerLevel level, ExpectedBlock block) {
         BlockPos pos = block.position();
-        if (!replaceable(level.getBlockState(pos)) || level.getBlockEntity(pos) != null) return;
-        if (!level.setBlock(pos, block.state(), Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE)) return;
+        // Remove the old block entity even when replacing a chest with a chest.
+        // Otherwise vanilla can retain its inventory instead of the template NBT.
+        // No destruction/drop APIs: reset containers cannot spill duplicate loot.
+        level.removeBlockEntity(pos);
+        level.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE);
+        level.setBlock(pos, block.state(), Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE);
         if (block.nbt() != null) {
             BlockEntity entity = BlockEntity.loadStatic(pos, block.state(), block.nbt().copy(), level.registryAccess());
             if (entity != null) {
@@ -305,7 +325,7 @@ final class AutomaticIslandRepair {
         int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE, minZ = Integer.MAX_VALUE;
         int maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE, maxZ = Integer.MIN_VALUE;
         int scanX, scanY, scanZ, writeIndex;
-        boolean preflightDone, finished;
+        boolean preflightDone, cleared, finished;
         Set<BlockPos> reserved = Set.of();
 
         SectionWork(String key) {
@@ -336,28 +356,29 @@ final class AutomaticIslandRepair {
             if (!approaching || level.players().stream().anyMatch(player -> player.getBoundingBox().intersects(bounds))) {
                 return false;
             }
-            if (ledger.pending.contains(key)) {
-                // A saved repair can be resumed after a restart without
-                // resetting containers that were already placed or opened.
-                preflightDone = true;
-            }
             if (!preflightDone) {
+                // Explicit restoration accepts surviving blocks and player builds.
+                preflightDone = true;
+                ledger.begin(key);
+            }
+            if (!cleared) {
+                int writes = 0;
                 BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
-                for (int count = 0; count < SCAN_BUDGET; count++) {
+                for (int count = 0; count < SCAN_BUDGET && writes < WRITE_BUDGET; count++) {
                     cursor.set(scanX, scanY, scanZ);
-                    if (!reserved.contains(cursor) && !replaceable(level.getBlockState(cursor))) {
-                        // Any surviving structure or player block in this
-                        // section means it must not be replayed automatically.
-                        finish(ledger);
-                        return true;
+                    if (!reserved.contains(cursor) && !level.isOutsideBuildHeight(cursor)
+                            && level.getWorldBorder().isWithinBounds(cursor)
+                            && (!level.getBlockState(cursor).isAir() || level.getBlockEntity(cursor) != null)) {
+                        level.removeBlockEntity(cursor);
+                        level.setBlock(cursor, Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE);
+                        writes++;
                     }
                     if (++scanX > maxX) {
                         scanX = minX;
                         if (++scanZ > maxZ) {
                             scanZ = minZ;
                             if (++scanY > maxY) {
-                                preflightDone = true;
-                                ledger.begin(key);
+                                cleared = true;
                                 break;
                             }
                         }
@@ -372,7 +393,7 @@ final class AutomaticIslandRepair {
                 if (!reserved.contains(pos)) placeExpected(level, block);
             }
             if (writeIndex == expected.size()) {
-                LOGGER.info("Completed missing Sky Island section {} ({} template blocks)", key, expected.size());
+                LOGGER.info("Restored Sky Island section {} ({} template blocks)", key, expected.size());
                 finish(ledger);
             }
             return true;

@@ -4,9 +4,10 @@ INSTALLATION
 
 1. Install Fabric Loader for Minecraft 26.3.
 2. Install Fabric API and Cristel Lib 3.1.12 or newer.
-3. Put skyblocks-0.1.0.jar into the instance's mods folder.
-4. Create a new world after installing the mod. Structures are selected during
-   chunk generation, so previously generated chunks will not be retrofitted.
+3. Put skyblocks-0.1.5-full-restore.jar into the instance's mods folder.
+4. New islands generate in new chunks. Existing naturally generated islands can
+   be fully reset using the lodestone T marker and a carved pumpkin placed last.
+   Full reset overwrites builds and all container contents inside template bounds.
 
 GENERATION SETTINGS
 
